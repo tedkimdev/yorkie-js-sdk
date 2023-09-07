@@ -849,8 +849,16 @@ export class Client implements Observable<ClientEvent> {
           };
 
           stream.on('data', (resp: WatchDocumentResponse) => {
-            this.handleWatchDocumentsResponse(attachment, resp);
-            resolve(stream);
+            const pbWatchEvent = resp.getEvent()!;
+            const eventType = pbWatchEvent.getType();
+            if (
+              eventType === PbDocEventType.DOC_EVENT_TYPE_DOCUMENT_RECONNECT
+            ) {
+              onStreamDisconnect();
+            } else {
+              this.handleWatchDocumentsResponse(attachment, resp);
+              resolve(stream);
+            }
           });
           stream.on('end', onStreamDisconnect);
           stream.on('error', onStreamDisconnect);
